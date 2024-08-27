@@ -3,15 +3,14 @@ import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "@uidotdev/usehooks";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useState, type FormEvent } from "react";
-import { Loader2 } from "lucide-react";
+import { useState } from "react";
 
 const responseValidator = z.object({
   searchResults: z.array(z.string()),
 });
-export default function Home() {
-  const [query, setQuery] = useState<string | null>(null);
+
+export default function Page() {
+  const [query, setQuery] = useState<string>("");
   const deboundedQuery = useDebounce(query, 300);
   const results = useQuery({
     queryFn: async () => {
@@ -20,18 +19,12 @@ export default function Home() {
       const { searchResults } = responseValidator.parse(json);
       return searchResults;
     },
-    queryKey: ["search", { query }],
-    enabled: deboundedQuery == null,
+    queryKey: ["search", { deboundedQuery }],
   });
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    await results.refetch();
-  };
-
   return (
-    <div className="w-full max-w-md mx-auto p-4">
-      <form onSubmit={handleSubmit} className="flex space-x-2 mb-4">
+    <div className="w-full max-w-md mx-auto p-4 space-y-4">
+      <div className="flex space-x-2 ">
         <Input
           type="text"
           value={query ?? undefined}
@@ -39,22 +32,11 @@ export default function Home() {
           placeholder="Search..."
           className="flex-grow"
         />
-        <Button
-          type="submit"
-          disabled={results.isFetching}
-          className="shrink-0"
-        >
-          {results.isFetching ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            </>
-          ) : (
-            "Search"
-          )}
-        </Button>
-      </form>
+      </div>
+      {!results.isLoading && query === "" && <h2>Search for pokemon!</h2>}
+      {results.isLoading && <p className="text-sm">Loading...</p>}
       {results.isError && (
-        <p className="text-red-500 text-sm mb-4">
+        <p className="text-red-500 text-sm">
           An error occurred while searching. Please try again.
         </p>
       )}
@@ -67,7 +49,7 @@ export default function Home() {
           ))}
         </ul>
       ) : (
-        <p>no results</p>
+        !results.isLoading && <p className="text-sm">no results</p>
       )}
     </div>
   );

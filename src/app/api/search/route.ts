@@ -24,11 +24,20 @@ const database = [
 ];
 
 const queryValidator = z.string().max(50);
-
-export const POST = (req: Request): Response => {
+function wait(ms: number): Promise<void> {
+  return new Promise((res) => setTimeout(res, ms));
+}
+export const GET = async (req: Request): Promise<Response> => {
   const rawQuery = new URL(req.url).searchParams.get("query");
   const parsedQuery = queryValidator.parse(rawQuery);
-  const searchResults = database.filter((name) => name.includes(parsedQuery));
+  // normalize names to lowercase
+  const searchResults =
+    parsedQuery !== ""
+      ? database.filter((name) =>
+          name.toLowerCase().startsWith(parsedQuery.toLowerCase()),
+        )
+      : database;
+  await wait(400); // artifical delay so we can see loading indicator on frontend
   return Response.json({
     searchResults,
   });

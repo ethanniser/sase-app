@@ -49,7 +49,7 @@ export default function Page() {
           ))}
         </ul>
       ) : (
-        !results.isLoading && <p className="text-sm">no results</p>
+        !results.isLoading && <p className="text-sm">No results</p>
       )}
     </div>
   );
